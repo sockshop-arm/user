@@ -1,10 +1,12 @@
-version: '2'
+version: '3'
 
 services:
     user:
         build:
             context: .
-        image: weaveworksdemos/user
+        image: codelab/user
+        depends_on:
+            - user-db
         hostname: user
         restart: always
         cap_drop:
@@ -16,11 +18,11 @@ services:
             - MONGO_HOST=user-db:27017
             - reschedule=on-node-failure
         ports:
-            - "8080:80"
+            - "8080:8084"
     user-db:
         build:
             context: ./docker/user-db/
-        image: weaveworksdemos/user-db
+        image: codelab/user-db
         hostname: user-db
         restart: always
         cap_drop:
@@ -29,10 +31,13 @@ services:
             - CHOWN
             - SETGID
             - SETUID
-        read_only: true
-        tmpfs:
-            - /tmp:rw,noexec,nosuid
         environment:
             - reschedule=on-node-failure
+            - AUTH=no
+            - MONGO_INITDB_DATABASE=db-users
         ports:
             - "27017:27017"
+        volumes:
+            - 'db:/data/db-users'
+volumes:
+  db:
